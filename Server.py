@@ -9,7 +9,7 @@ import random
 import sys
 
 maxPacketSize = 1024
-defaultPort = 0 #TODO: Set this to your preferred port
+defaultPort = 4000 #TODO: Set this to your preferred port
 
 def GetFreePort(minPort: int = 1024, maxPort: int = 65535):
     for i in range(minPort, maxPort):
@@ -36,8 +36,26 @@ def GetServerData() -> []:
 
 
 def ListenOnTCP(tcpSocket: socket.socket, socketAddress):
-    pass; #TODO: Implement TCP Code, use GetServerData to query the database.
-
+    try:
+        while True:
+            clientMessage = tcpSocket.recv(maxPacketSize)
+            if not clientMessage:
+                print(f"Client at {socketAddress} has disconnected.")
+                break
+            
+            clientMessage = clientMessage.decode('utf-8')
+            print(f"Client message from {socketAddress}:", clientMessage)
+            
+            # TODO: Implement the logic to process the client message and query the database if needed
+            response = clientMessage.upper()
+            tcpSocket.send(response.encode('utf-8'))
+            
+    except ConnectionResetError:
+        print(f"Connection reset by {socketAddress}.")
+    except Exception as e:
+        print(f"An error occurred with the client at {socketAddress}: {e}")
+    finally:
+        tcpSocket.close()
 
 
 
@@ -62,6 +80,7 @@ def LaunchTCPThreads():
 if __name__ == "__main__":
     tcpThread = threading.Thread(target=LaunchTCPThreads);
     tcpThread.start();
+    exitSignal = False
 
     while not exitSignal:
         time.sleep(1);

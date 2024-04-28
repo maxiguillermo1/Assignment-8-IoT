@@ -7,7 +7,7 @@ import errno
 
 maxPacketSize = 1024
 defaultPort = 4000 # TODO: Change this to your expected port
-serverIP = '***.***.***.***' #TODO: Change this to your instance IP
+serverIP = '127.0.0.1' #TODO: Change this to your instance IP
 
 tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
 try:
@@ -20,11 +20,16 @@ tcpSocket.connect((serverIP, tcpPort));
 
 clientMessage = "";
 while clientMessage != "exit":
-    clientMessage = input("Please type the message that you'd like to send (Or type \"exit\" to exit):\n>");
+    clientMessage = input("Please type the message that you'd like to send (Or type 'exit' to exit):\n>")
 
-    #TODO: Send the message to your server
-    #TODO: Receive a reply from the server for the best highway to take
-    #TODO: Print the best highway to take
+    # Send the message to the server
+    tcpSocket.sendall(clientMessage.encode())
+
+    # Wait for a reply from the server
+    serverMessage = tcpSocket.recv(maxPacketSize).decode('utf-8')
+    print("Server echo:", serverMessage)
+    # Print the best highway to take
+    # print(f"Recommended highway: {reply.decode()}")
     
 tcpSocket.close();
 

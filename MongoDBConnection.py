@@ -7,11 +7,15 @@ import time
 
 DBName = "test" #Use this to change which Database we're accessing
 connectionURL = "mongodb+srv://jesusdonate:Jdr081201@cluster0.sc8urqs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" #Put your database URL here
-sensorTable = "sensor data table" #Change this to the name of your sensor data table
+sensorTable = "sensor data" #Change this to the name of your sensor data table
 
 def QueryToList(query):
-  pass; #TODO: Convert the query that you get in this function to a list and return it
-  #HINT: MongoDB queries are iterable
+	#TODO: Convert the query that you get in this function to a list and return it
+	#HINT: MongoDB queries are iterable
+    queryList = []
+    for doc in query:
+        queryList.append(doc)
+    return queryList
 
 def QueryDatabase() -> []:
 	global DBName
@@ -33,7 +37,7 @@ def QueryDatabase() -> []:
 		sensorTable = db[sensorTable]
 		print("Table:", sensorTable)
 		#We convert the cursor that mongo gives us to a list for easier iteration.
-		timeCutOff = datetime.now() - timedelta(minutes=0) #TODO: Set how many minutes you allow
+		timeCutOff = datetime.now() - timedelta(minutes=30) #TODO: Set how many minutes you allow
 
 		oldDocuments = QueryToList(sensorTable.find({"time":{"$gte":timeCutOff}}))
 		currentDocuments = QueryToList(sensorTable.find({"time":{"$lte":timeCutOff}}))
@@ -43,6 +47,7 @@ def QueryDatabase() -> []:
 
 		#TODO: Parse the documents that you get back for the sensor data that you need
 		#Return that sensor data as a list
+		return []
 
 
 	except Exception as e:
