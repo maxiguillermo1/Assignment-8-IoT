@@ -50,6 +50,11 @@ def ListenOnTCP(tcpSocket: socket.socket, socketAddress):
             response = clientMessage.upper()
             tcpSocket.send(response.encode('utf-8'))
             
+            print("MOngoDB BS")
+            returnedData = GetServerData()
+            print("Returning Data")
+            print(returnedData)
+            
     except ConnectionResetError:
         print(f"Connection reset by {socketAddress}.")
     except Exception as e:
