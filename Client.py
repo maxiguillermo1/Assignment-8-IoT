@@ -6,7 +6,7 @@ import contextlib
 import errno
 
 maxPacketSize = 1024
-defaultPort = 0 # TODO: Change this to your expected port
+defaultPort = 4000 # TODO: Change this to your expected port
 serverIP = '***.***.***.***' #TODO: Change this to your instance IP
 
 tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
