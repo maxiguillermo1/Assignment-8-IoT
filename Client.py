@@ -27,9 +27,8 @@ while clientMessage != "exit":
 
     # Wait for a reply from the server
     serverMessage = tcpSocket.recv(maxPacketSize).decode('utf-8')
-    print("Server echo:", serverMessage)
     # Print the best highway to take
-    # print(f"Recommended highway: {reply.decode()}")
+    print(f"Recommended highway: {serverMessage}")
     
 tcpSocket.close();
 

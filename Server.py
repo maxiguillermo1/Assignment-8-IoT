@@ -47,13 +47,22 @@ def ListenOnTCP(tcpSocket: socket.socket, socketAddress):
             print(f"Client message from {socketAddress}:", clientMessage)
             
             # TODO: Implement the logic to process the client message and query the database if needed
-            response = clientMessage.upper()
-            tcpSocket.send(response.encode('utf-8'))
+            # response = clientMessage.upper()
+            # tcpSocket.send(response.encode('utf-8'))
             
             print("MOngoDB BS")
-            returnedData = GetServerData()
+            data_list = GetServerData()
+            print(data_list)
             print("Returning Data")
-            print(returnedData)
+            bestKey, bestValue = data_list[0]
+            for key, value in data_list:
+                if(value < bestValue):
+                    bestKey = key
+                    bestValue = value
+            print(bestKey, bestValue)
+            response = f'{bestKey}, {bestValue}'
+            tcpSocket.send(response.encode())
+
             
     except ConnectionResetError:
         print(f"Connection reset by {socketAddress}.")
