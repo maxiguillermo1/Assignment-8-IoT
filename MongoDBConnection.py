@@ -52,8 +52,8 @@ def QueryDatabase() -> []: # type: ignore
         #We convert the cursor that mongo gives us to a list for easier iteration.
         timeCutOff = datetime.now() - timedelta(minutes=5) #TODO: Set how many minutes you allow
 
-        oldDocuments = QueryToList(sensorTable.find({"time":{"$gte":timeCutOff}}))
-        currentDocuments = QueryToList(sensorTable.find({"time":{"$lt":timeCutOff}}))
+        oldDocuments = QueryToList(sensorTable.find({"time":{"$lt":timeCutOff}}))
+        currentDocuments = QueryToList(sensorTable.find({"time":{"$gte":timeCutOff}}))
 
         print("Current Docs:",currentDocuments)
         print()
