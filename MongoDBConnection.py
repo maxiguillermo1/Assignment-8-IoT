@@ -9,7 +9,7 @@ import pytz
 
 DBName = "test" #Use this to change which Database we're accessing
 connectionURL = "mongodb+srv://jesusdonate:Jdr081201@cluster0.sc8urqs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" #Put your database URL here
-sensorTable = "sensor data" #Change this to the name of your sensor data table
+sensorTableStr = "sensor data" #Change this to the name of your sensor data table
 
 def QueryToList(query):
     #TODO: Convert the query that you get in this function to a list and return it
@@ -48,7 +48,7 @@ def QueryDatabase() -> []: # type: ignore
         print("Database collections: ", db.list_collection_names())
 
         #We first ask the user which collection they'd like to draw from.
-        sensorTable = db[sensorTable]
+        sensorTable = db[sensorTableStr]
         print("Table:", sensorTable)
         #We convert the cursor that mongo gives us to a list for easier iteration.
         timeCutOff = datetime.now() - timedelta(minutes=5) #TODO: Set how many minutes you allow
