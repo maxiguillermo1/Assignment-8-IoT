@@ -54,13 +54,15 @@ def ListenOnTCP(tcpSocket: socket.socket, socketAddress):
             data_list = GetServerData()
             print(data_list)
             print("Returning Data")
-            bestKey, bestValue = data_list[0]
-            for key, value in data_list:
-                if(value < bestValue):
-                    bestKey = key
-                    bestValue = value
-            print(bestKey, bestValue)
-            response = f'{bestKey}, {bestValue}'
+            response = 'No Current Documents Found'
+            if data_list != []:
+                bestKey, bestValue = data_list[0]
+                for key, value in data_list:
+                    if(value < bestValue):
+                        bestKey = key
+                        bestValue = value
+                print(bestKey, bestValue)
+                response = f'{bestKey}, {bestValue}'
             tcpSocket.send(response.encode())
 
             

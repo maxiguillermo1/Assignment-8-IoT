@@ -5,6 +5,7 @@ import threading
 import pymongo
 from datetime import datetime, timedelta
 import time
+import pytz
 
 DBName = "test" #Use this to change which Database we're accessing
 connectionURL = "mongodb+srv://jesusdonate:Jdr081201@cluster0.sc8urqs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" #Put your database URL here
@@ -51,7 +52,8 @@ def QueryDatabase() -> []: # type: ignore
         print("Table:", sensorTable)
         #We convert the cursor that mongo gives us to a list for easier iteration.
         timeCutOff = datetime.now() - timedelta(minutes=5) #TODO: Set how many minutes you allow
-
+        timeCutOff = timeCutOff.astimezone(pytz.utc)
+        print(f"TimeCutOff {timeCutOff}")
         oldDocuments = QueryToList(sensorTable.find({"time":{"$lt":timeCutOff}}))
         currentDocuments = QueryToList(sensorTable.find({"time":{"$gte":timeCutOff}}))
 
