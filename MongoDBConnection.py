@@ -7,29 +7,36 @@ from datetime import datetime, timedelta
 import time
 import pytz
 
-DBName = "test" #Use this to change which Database we're accessing
+DBName = "test" 
 connectionURL = "mongodb+srv://jesusdonate:Jdr081201@cluster0.sc8urqs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" #Put your database URL here
-sensorTableStr = "sensor data" #Change this to the name of your sensor data table
+sensorTableStr = "sensor data" 
+sensorTableMetaDataStr = "sensor data_metadata"
 
 def QueryToList(query):
-    #TODO: Convert the query that you get in this function to a list and return it
-    #HINT: MongoDB queries are iterable
     queryList = []
     for doc in query:
         queryList.append(doc)
     return queryList
 
+def print_sensor_metadata(sensorMetaData):
+    docs = sensorMetaData.find({})
+    metadata_list = []
+    for doc in docs:
+        uid, location = ParseMetaDataDocument(doc)
+        metadata_list.append((uid, location))
+    return metadata_list
+
+def ParseMetaDataDocument(doc):
+    lat = doc.get('latitude', 'Unknown')
+    long = doc.get('longitude', 'Unknown')
+    location = f"{lat},{long}"
+    uid = doc.get('assetUid', 'default_uid')
+    return uid, location
 
 def ParseDocument(doc):
-    # Function to parse individual MongoDB documents and extract relevant information.
-    
-    # Extracting the road name from the 'topic' field of the document.
     road = doc['topic'].split('/')[0]
-    
-    # Extracting traffic sensor values; assuming all keys that include 'Traffic Sensor' are relevant.
     traffic_values = [value for key, value in doc['payload'].items() if 'Traffic Sensor' in key]
-    
-    return road, traffic_values  # Simplified return without record_time since it's not used in aggregation.
+    return road, traffic_values  
 
 def QueryDatabase() -> []: # type: ignore
     global DBName
@@ -45,42 +52,69 @@ def QueryDatabase() -> []: # type: ignore
         cluster = connectionURL
         client = MongoClient(cluster)
         db = client[DBName]
-        print("Database collections: ", db.list_collection_names())
-
-        #We first ask the user which collection they'd like to draw from.
+       
+        #print("Database collections: ", db.list_collection_names())
         sensorTable = db[sensorTableStr]
-        print("Table:", sensorTable)
+        #print("Table:", sensorTable)
+        sensorMetaData = db[sensorTableMetaDataStr]
+        #print_sensor_metadata(sensorMetaData)
+        metadata_list = print_sensor_metadata(sensorMetaData)
+   
+
+        metaDoc = QueryToList
         #We convert the cursor that mongo gives us to a list for easier iteration.
         timeCutOff = datetime.now() - timedelta(minutes=5) #TODO: Set how many minutes you allow
         timeCutOff = timeCutOff.astimezone(pytz.utc)
-        print(f"TimeCutOff {timeCutOff}")
+        
+        print(" ")
+        print(f"Data TimeCutOff {timeCutOff}")
         oldDocuments = QueryToList(sensorTable.find({"time":{"$lt":timeCutOff}}))
         currentDocuments = QueryToList(sensorTable.find({"time":{"$gte":timeCutOff}}))
 
+
+        print(" ")
+        print("Current & Old Documents...")
+        print(" ")
         print("Current Docs:",currentDocuments)
-        print()
-        print("Old Docs:",oldDocuments)
         print("\n\n")
+        print("Old Docs:",oldDocuments)
 
-        #TODO: Parse the documents that you get back for the sensor data that you need
-        #Return that sensor data as a list
-
-        #Return that sensor data as a list
         road_data = {}
         for doc in currentDocuments:
             try:
-                road, traffic_values = ParseDocument(doc)  # Parsing individual document.
-                road_data.setdefault(road, []).extend(traffic_values)  # Adding traffic time to road data.
+                road, traffic_values = ParseDocument(doc)
+                road_data.setdefault(road, []).extend(traffic_values)
             except ValueError:
-                # Handling case where sensor data is not found in the document.
                 continue
 
-        # Calculating average traffic for each road and formatting the results.
-        results = [(road, np.mean(values)) for road, values in road_data.items() if values]
+        results = []
+        for i, (road, values) in enumerate(road_data.items()):
+            if values:
+                average_traffic = np.mean(values)
+                uid, location = metadata_list[i] if i < len(metadata_list) else ("Unknown", "Unknown")
+                formatted_str = f"|------Highway {i + 1}------|\n" \
+                                f"|Name: {road}   |\n" \
+                                f"|Uid: {uid} |\n" \
+                                f"|Location: {location}      |\n" \
+                                f"|Avg. traffic: {average_traffic:.2f}  |\n" \
+                                f"|---------------------|\n"
+                print(formatted_str)
+                results.append((road, average_traffic, uid, location))
 
-        return results  # Returning formatted results.
+        if results:
+            best_traffic = min(results, key=lambda x: x[1])
+            best_index = results.index(best_traffic)
+            uid, location = metadata_list[best_index] if best_index < len(metadata_list) else ("Unknown", "Unknown")
+           
+            ''' 
+            print(f"Best Highway Traffic:\nHighway {best_index + 1}:\n"
+                f"Name: {best_traffic[0]}\n"
+                f"Uid: {uid}\n"
+                f"Location: {location}\n"
+                f"Avg traffic: {best_traffic[1]:.2f}\n")
+            '''
 
-
+        return results 
 
     except Exception as e:
         print("Please make sure that this machine's IP has access to MongoDB.")

@@ -4,12 +4,13 @@ import threading
 import time
 import contextlib
 import errno
+import json
 from dataclasses import dataclass
 import random
 import sys
 
 maxPacketSize = 1024
-defaultPort = 4000 #TODO: Set this to your preferred port
+defaultPort = 4000 
 
 def GetFreePort(minPort: int = 1024, maxPort: int = 65535):
     for i in range(minPort, maxPort):
@@ -24,15 +25,11 @@ def GetFreePort(minPort: int = 1024, maxPort: int = 65535):
                 if e.errno == errno.EADDRINUSE:
                     print("Port",i,"already in use. Checking next...");
                 else:
-                    print("An exotic error occurred:",e);
+                    print("An error occurred:",e);
 
 def GetServerData() -> []:
     import MongoDBConnection as mongo
     return mongo.QueryDatabase();
-
-
-
-
 
 
 def ListenOnTCP(tcpSocket: socket.socket, socketAddress):
@@ -42,30 +39,42 @@ def ListenOnTCP(tcpSocket: socket.socket, socketAddress):
             if not clientMessage:
                 print(f"Client at {socketAddress} has disconnected.")
                 break
-            
+
             clientMessage = clientMessage.decode('utf-8')
-            print(f"Client message from {socketAddress}:", clientMessage)
             
-            # TODO: Implement the logic to process the client message and query the database if needed
-            # response = clientMessage.upper()
-            # tcpSocket.send(response.encode('utf-8'))
+            print(f"Client messaged recieved! from {socketAddress}:", clientMessage)
+            print("")
+            print("MongoDB Succesfully Connected!")
             
-            print("MOngoDB BS")
             data_list = GetServerData()
-            print(data_list)
-            print("Returning Data")
+            print("Sending Best Highway Data to the Client...")
             response = 'No Current Documents Found'
-            if data_list != []:
-                bestKey, bestValue = data_list[0]
-                for key, value in data_list:
-                    if(value < bestValue):
-                        bestKey = key
-                        bestValue = value
-                print(bestKey, bestValue)
-                response = f'{bestKey}, {bestValue}'
+
+            if data_list:
+                try:
+                  
+                    best_traffic = min(data_list, key=lambda x: x[1])
+                    best_index = data_list.index(best_traffic)
+                    name, avg_traffic, uid, location = best_traffic  
+
+                    response =  (
+                                
+                                f"|---------------------|\n"
+                                f"|Highway {best_index + 1}            |\n"
+                                f"|Name: {name}    |\n"
+                                f"|Uid: {uid} |\n" \
+                                f"|Location: {location}      |\n" \
+                                f"|Avg. traffic: {avg_traffic:.2f}  |\n" \
+                                f"|---------------------|\n"
+                                
+                                )
+                
+                except (IndexError, ValueError) as e:
+                    print("Error unpacking data:", e)
+                    response = "Incomplete or corrupted data"
+
             tcpSocket.send(response.encode())
 
-            
     except ConnectionResetError:
         print(f"Connection reset by {socketAddress}.")
     except Exception as e:
@@ -73,15 +82,12 @@ def ListenOnTCP(tcpSocket: socket.socket, socketAddress):
     finally:
         tcpSocket.close()
 
-
-
-
-
-
 def CreateTCPSocket() -> socket.socket:
     tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
     tcpPort = defaultPort
+    print(" ")
     print("TCP Port:",tcpPort);
+    print(" ")
     tcpSocket.bind(('localhost', tcpPort));
     return tcpSocket;
 
